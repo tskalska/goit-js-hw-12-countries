@@ -1,0 +1,17 @@
+<div>
+  <h1>Country name: {{name}}</h1>
+  <div>Capital: {{capital}}</div>
+  
+    <ul class="horizontal-list">Languages: 
+      {{#each languages}}
+        <li>{{this.name}}</li>{{#unless @last}}, {{/unless}}
+      {{/each}} 
+    </ul>
+  
+  <div>
+    Population: {{population}}
+  </div>
+</div>
+<div>
+  <img src="{{flag}}" alt="flag" width="300" height="200">
+</div>

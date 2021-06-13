@@ -1,49 +1,54 @@
 import './sass/main.scss';
 import {fetchCountries} from './fetchCountries';
-import { alert, notice, info, success, error } from '@pnotify/core';
+import { alert } from '@pnotify/core';
 import '@pnotify/core/dist/BrightTheme.css';
+import countrycard from './tamplates/countrycard.hbs'
+import countriesList from './tamplates/countriesList.hbs'
 
+const debounce = require('lodash.debounce');
 const inputEl = document.querySelector('.country-input');
 const cardContainerEl = document.querySelector('.card-container');
-const debounce = require('lodash.debounce');
+
 
 inputEl.addEventListener('input', debounce(onInputChange, 500));
 
-function onInputChange(ev) {
+function onInputChange(event) {
   cardContainerEl.innerHTML = '';
-  fetchCountries(ev.target.value).then(data => { renderCountries(data); });
-};
+  const countryInputName = event.target.value.trim();
 
-function renderCountries(countriesData) {
+  if (!countryInputName) {
+    return;
+  }
+
+  fetchCountries(countryInputName)
+  .then(renderCountriesCard)
+  .catch(error => {
+      return alert({
+        text: error,
+        type: 'error',
+      });
+    
+  });
+}
+
+function renderCountriesCard(countriesData) {
+
   const countriesCount = countriesData.length;
 
   if (countriesCount === 1) {
-    let name, capital, languages, population, flag;
-    ({name, capital, languages, population, flag} = countriesData[0]);
-  
-    cardContainerEl.insertAdjacentHTML('afterbegin',`
-    <div>Country name: ${name}</div>
-    <div>Capital: ${capital}</div>
-    <div>Languages: ${languages.map(lang => lang.name).join(', ')}</div>
-    <div>Population: ${population}</div>
-    <div><img src="${flag}" alt="flag" width="300" height="200"></div>`)
+    cardContainerEl.insertAdjacentHTML('afterbegin', countrycard(countriesData[0]));
     return;
   }
 
-  if (countriesCount > 10) {
-    return alert({
-      text: "To many matches found. Please enter a more specific query!",
-      type: 'info'
-    });
-  }
+  if (countriesCount > 1 && countriesCount < 10) {
+    cardContainerEl.insertAdjacentHTML('afterbegin',
+      countriesList({countriesData})
+    );
+    return ;
+  };
 
-  countriesData.forEach (el=>{
-    const cardListEL = document.createElement('ul');
-    cardListEL.insertAdjacentHTML('afterbegin',
-    `<li>${el.name}</li>`)
-    cardContainerEl.appendChild(cardListEL);
-    return;
-  })
+  return alert({
+    text: "Too many matches found. Please enter a more specific query!",
+    type: 'info',
+  });
 }
-
-
